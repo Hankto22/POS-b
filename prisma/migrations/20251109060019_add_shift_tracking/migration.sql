@@ -1,0 +1,11 @@
+-- CreateTable
+CREATE TABLE "Shift" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "userId" TEXT NOT NULL,
+    "startTime" DATETIME NOT NULL,
+    "endTime" DATETIME,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "totalSales" REAL NOT NULL DEFAULT 0,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "Shift_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+);

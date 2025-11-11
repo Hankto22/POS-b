@@ -1,0 +1,133 @@
+// Prisma schema: cleaned and consolidated models.
+// NOTE: This uses SQLite for local development. If your production DB is SQL Server,
+// change `provider = "sqlite"` to `provider = "sqlserver"` and set DATABASE_URL accordingly.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Customer {
+  id            String   @id @default(uuid())
+  name          String
+  phone         String   @unique
+  email         String?
+  preferences   String?
+  loyaltyPoints Int      @default(0)
+  membershipTier String  @default("Bronze") // Bronze, Silver, Gold, Platinum
+  totalSpent    Float    @default(0)
+  referralCode  String?  @unique
+  referredBy    String?
+  createdAt     DateTime @default(now())
+
+  sales Sale[]
+}
+
+model Category {
+  id        String    @id @default(uuid())
+  name      String
+  createdAt DateTime  @default(now())
+
+  products  Product[]
+}
+
+model Product {
+  id            String     @id @default(uuid())
+  name          String
+  categoryId    String
+  sellingPrice  Float
+  buyingCost    Float
+  brand         String?
+  wholesalerId  String
+  stock         Int
+  imageUrl      String?
+  createdAt     DateTime   @default(now())
+
+  category   Category     @relation(fields: [categoryId], references: [id])
+  wholesaler Wholesaler   @relation(fields: [wholesalerId], references: [id])
+  sales      Sale[]
+  invoiceItems InvoiceItem[]
+}
+
+model Sale {
+  id         String   @id @default(uuid())
+  productId  String
+  customerId String?
+  quantity   Int
+  total      Float
+  createdAt  DateTime @default(now())
+
+  product  Product  @relation(fields: [productId], references: [id])
+  customer Customer? @relation(fields: [customerId], references: [id])
+}
+
+model Wholesaler {
+  id        String    @id @default(uuid())
+  name      String
+  contact   String?
+  email     String?
+  address   String?
+  createdAt DateTime  @default(now())
+
+  products Product[]
+  invoices Invoice[]
+}
+
+model Invoice {
+  id           String       @id @default(uuid())
+  wholesalerId String
+  totalAmount  Float
+  invoiceDate  DateTime     @default(now())
+  createdAt    DateTime     @default(now())
+
+  wholesaler Wholesaler   @relation(fields: [wholesalerId], references: [id])
+  items      InvoiceItem[]
+}
+
+model InvoiceItem {
+  id         String  @id @default(uuid())
+  invoiceId  String
+  productId  String
+  quantity   Int
+  unitCost   Float
+  totalCost  Float
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+}
+
+model User {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  password  String
+  role      String   @default("staff") // admin, manager, staff
+  name      String
+  email     String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  shifts Shift[]
+}
+
+model Shift {
+  id         String   @id @default(uuid())
+  userId     String
+  startTime  DateTime
+  endTime    DateTime?
+  isActive   Boolean  @default(true)
+  totalSales Float    @default(0)
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Promo {
+  id        String   @id @default(uuid())
+  code      String   @unique
+  discount  Float
+  expiresAt DateTime
+}
