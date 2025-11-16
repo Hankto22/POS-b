@@ -1,4 +1,5 @@
 import { prisma } from '../db/prisma.js';
+import { PrismaClient } from '@prisma/client';
 
 export const fetchSales = async () => {
   return await prisma.sale.findMany({
@@ -20,7 +21,7 @@ export const fetchSalesByDateRange = async (startDate: Date, endDate: Date) => {
 
 export const addSale = async (data: any) => {
   // Start a transaction to ensure data consistency
-  return await prisma.$transaction(async (tx: any) => {
+  return await prisma.$transaction(async (tx: PrismaClient) => {
     // Create the sale record
     const newSale = await tx.sale.create({ data });
 
@@ -125,7 +126,7 @@ export const createTransaction = async (data: {
     throw new Error('Payment total does not match sale total');
   }
 
-  return await prisma.$transaction(async (tx) => {
+  return await prisma.$transaction(async (tx: PrismaClient) => {
     // Create transaction
     const transaction = await tx.transaction.create({
       data: {

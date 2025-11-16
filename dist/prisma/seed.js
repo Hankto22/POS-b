@@ -3,43 +3,76 @@ const PrismaClientClass = PrismaPkg.PrismaClient || PrismaPkg.default || PrismaP
 const prisma = new PrismaClientClass();
 async function main() {
     // Categories
-    const categories = await prisma.category.createMany({
-        data: [
-            { name: 'Boho' },
-            { name: 'Formal' },
-            { name: 'Casual' },
-            { name: 'Evening Wear' },
-            { name: 'Accessories' },
-        ],
+    const bohoCategory = await prisma.category.create({
+        data: { name: 'Boho' },
+    });
+    const formalCategory = await prisma.category.create({
+        data: { name: 'Formal' },
+    });
+    const casualCategory = await prisma.category.create({
+        data: { name: 'Casual' },
+    });
+    const eveningCategory = await prisma.category.create({
+        data: { name: 'Evening Wear' },
+    });
+    const accessoriesCategory = await prisma.category.create({
+        data: { name: 'Accessories' },
+    });
+    // Wholesalers
+    const wholesaler1 = await prisma.wholesaler.create({
+        data: {
+            name: 'Fashion Wholesale Co',
+            contact: '+254700000000',
+            email: 'contact@fashionwholesale.com'
+        },
+    });
+    const wholesaler2 = await prisma.wholesaler.create({
+        data: {
+            name: 'Premium Accessories Ltd',
+            contact: '+254711111111',
+            email: 'sales@premiumacc.com'
+        },
     });
     // Products
-    const products = await prisma.product.createMany({
+    await prisma.product.createMany({
         data: [
             {
                 name: 'Floral Maxi Dress',
-                categoryId: 'cat-boho',
-                price: 4500,
+                categoryId: bohoCategory.id,
+                sellingPrice: 4500,
+                buyingCost: 3000,
+                brand: 'Local Designer',
+                wholesalerId: wholesaler1.id,
                 stock: 12,
                 imageUrl: '/assets/maxi.jpg',
             },
             {
                 name: 'Black Blazer',
-                categoryId: 'cat-formal',
-                price: 6200,
+                categoryId: formalCategory.id,
+                sellingPrice: 6200,
+                buyingCost: 4000,
+                brand: 'Premium Brand',
+                wholesalerId: wholesaler1.id,
                 stock: 8,
                 imageUrl: '/assets/blazer.jpg',
             },
             {
                 name: 'Denim Jacket',
-                categoryId: 'cat-casual',
-                price: 3800,
+                categoryId: casualCategory.id,
+                sellingPrice: 3800,
+                buyingCost: 2500,
+                brand: 'Casual Wear',
+                wholesalerId: wholesaler2.id,
                 stock: 15,
                 imageUrl: '/assets/denim.jpg',
             },
             {
                 name: 'Gold Hoop Earrings',
-                categoryId: 'cat-accessories',
-                price: 1200,
+                categoryId: accessoriesCategory.id,
+                sellingPrice: 1200,
+                buyingCost: 800,
+                brand: 'Jewelry Co',
+                wholesalerId: wholesaler2.id,
                 stock: 25,
                 imageUrl: '/assets/hoops.jpg',
             },
