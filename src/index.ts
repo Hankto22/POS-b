@@ -9,12 +9,16 @@ import promoRoutes from './routes/promos.js'
 import dashboardRoutes from './routes/dashboard.js'
 import wholesalerRoutes from './routes/wholesalers.js'
 import invoiceRoutes from './routes/invoices.js'
+import authRoutes from './routes/auth.js'
+import shiftRoutes from './routes/shifts.js'
+import performanceRoutes from './routes/performance.js'
+import commissionRoutes from './routes/commissions.js'
 
 const app = new Hono()
 
 // Enable CORS
 app.use('*', cors({
-  origin: ['http://localhost:5173', 'http://localhost:5174'],
+  origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175'],
   allowHeaders: ['Content-Type', 'Authorization'],
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
 }))
@@ -30,6 +34,10 @@ app.route('/api/promos', promoRoutes)
 app.route('/api/dashboard', dashboardRoutes)
 app.route('/api/wholesalers', wholesalerRoutes)
 app.route('/api/invoices', invoiceRoutes)
+app.route('/api/auth', authRoutes)
+app.route('/api/shifts', shiftRoutes)
+app.route('/api/performance', performanceRoutes)
+app.route('/api/commissions', commissionRoutes)
 
 serve({
   fetch: app.fetch,

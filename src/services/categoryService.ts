@@ -9,3 +9,9 @@ export const addCategory = async (name: string) => {
     data: { name },
   });
 };
+
+export const deleteCategory = async (id: string) => {
+  return await prisma.category.delete({
+    where: { id },
+  });
+};

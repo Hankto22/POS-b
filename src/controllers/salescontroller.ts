@@ -5,7 +5,9 @@ import {
   addSale,
   calculateTotalRevenue,
   getTopSellingProducts,
-  getSalesByCustomer
+  getSalesByCustomer,
+  createTransaction,
+  fetchTransactions
 } from '../services/salesService.js';
 import { sendReceiptEmail } from '../services/emailService.js';
 
@@ -86,5 +88,26 @@ export const getCustomerSales = async (c: Context) => {
   } catch (error) {
     console.error('Error fetching customer sales:', error);
     return c.json({ error: 'Failed to fetch customer sales' }, 500);
+  }
+};
+
+export const createTransactionController = async (c: Context) => {
+  try {
+    const body = await c.req.json();
+    const transaction = await createTransaction(body);
+    return c.json(transaction, 201);
+  } catch (error) {
+    console.error('Error creating transaction:', error);
+    return c.json({ error: (error as Error).message || 'Failed to create transaction' }, 500);
+  }
+};
+
+export const getAllTransactions = async (c: Context) => {
+  try {
+    const transactions = await fetchTransactions();
+    return c.json(transactions);
+  } catch (error) {
+    console.error('Error fetching transactions:', error);
+    return c.json({ error: 'Failed to fetch transactions' }, 500);
   }
 };

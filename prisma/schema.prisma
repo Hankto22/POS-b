@@ -16,6 +16,7 @@ model Customer {
   name          String
   phone         String   @unique
   email         String?
+  birthday      DateTime?
   preferences   String?
   loyaltyPoints Int      @default(0)
   membershipTier String  @default("Bronze") // Bronze, Silver, Gold, Platinum
@@ -24,7 +25,10 @@ model Customer {
   referredBy    String?
   createdAt     DateTime @default(now())
 
-  sales Sale[]
+  sales       Sale[]
+  transactions Transaction[]
+  feedbacks   Feedback[]
+  offers      Offer[]
 }
 
 model Category {
@@ -51,18 +55,77 @@ model Product {
   wholesaler Wholesaler   @relation(fields: [wholesalerId], references: [id])
   sales      Sale[]
   invoiceItems InvoiceItem[]
+  variants   Variant[]
+}
+
+model Variant {
+  id        String   @id @default(uuid())
+  productId String
+  size      String?
+  color     String?
+  style     String?
+  stock     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id])
+  batches Batch[]
+  sales   Sale[]
+  invoiceItems InvoiceItem[]
+}
+
+model Batch {
+  id             String   @id @default(uuid())
+  variantId      String
+  batchNumber    String?
+  serialNumber   String?
+  expirationDate DateTime?
+  stock          Int      @default(0)
+  createdAt      DateTime @default(now())
+
+  variant Variant @relation(fields: [variantId], references: [id])
+  sales   Sale[]
+  invoiceItems InvoiceItem[]
 }
 
 model Sale {
+  id            String   @id @default(uuid())
+  productId     String
+  customerId    String?
+  transactionId String
+  variantId     String?
+  batchId       String?
+  quantity      Int
+  total         Float
+  createdAt     DateTime @default(now())
+
+  product     Product     @relation(fields: [productId], references: [id])
+  customer    Customer?   @relation(fields: [customerId], references: [id])
+  transaction Transaction @relation(fields: [transactionId], references: [id])
+  variant     Variant?    @relation(fields: [variantId], references: [id])
+  batch       Batch?      @relation(fields: [batchId], references: [id])
+}
+
+model Transaction {
   id         String   @id @default(uuid())
-  productId  String
   customerId String?
-  quantity   Int
   total      Float
+  tax        Float
+  discount   Float
   createdAt  DateTime @default(now())
 
-  product  Product  @relation(fields: [productId], references: [id])
   customer Customer? @relation(fields: [customerId], references: [id])
+  sales    Sale[]
+  payments Payment[]
+}
+
+model Payment {
+  id            String   @id @default(uuid())
+  transactionId String
+  method        String
+  amount        Float
+  createdAt     DateTime @default(now())
+
+  transaction Transaction @relation(fields: [transactionId], references: [id])
 }
 
 model Wholesaler {
@@ -92,12 +155,16 @@ model InvoiceItem {
   id         String  @id @default(uuid())
   invoiceId  String
   productId  String
+  variantId  String?
+  batchId    String?
   quantity   Int
   unitCost   Float
   totalCost  Float
 
   invoice Invoice @relation(fields: [invoiceId], references: [id])
   product Product @relation(fields: [productId], references: [id])
+  variant Variant? @relation(fields: [variantId], references: [id])
+  batch   Batch?   @relation(fields: [batchId], references: [id])
 }
 
 model User {
@@ -110,19 +177,32 @@ model User {
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
 
-  shifts Shift[]
+  shifts    Shift[]
+  campaigns Campaign[]
 }
 
 model Shift {
-  id         String   @id @default(uuid())
-  userId     String
-  startTime  DateTime
-  endTime    DateTime?
-  isActive   Boolean  @default(true)
-  totalSales Float    @default(0)
-  createdAt  DateTime @default(now())
+  id                   String   @id @default(uuid())
+  userId               String
+  startTime            DateTime
+  endTime              DateTime?
+  isActive             Boolean  @default(true)
+  totalSales           Float    @default(0)
+  totalHours           Float?   @default(0)
+  customerSatisfaction Float?
+  createdAt            DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id])
+  commissions Commission[]
+}
+
+model Commission {
+  id        String   @id @default(uuid())
+  shiftId   String
+  amount    Float
+  createdAt DateTime @default(now())
+
+  shift Shift @relation(fields: [shiftId], references: [id])
 }
 
 model Promo {
@@ -130,4 +210,41 @@ model Promo {
   code      String   @unique
   discount  Float
   expiresAt DateTime
+}
+
+model Campaign {
+  id          String   @id @default(uuid())
+  name        String
+  type        String   // SMS or Email
+  message     String
+  targetTiers String?  // comma-separated list of membership tiers
+  scheduledAt DateTime?
+  sentAt      DateTime?
+  createdBy   String
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [createdBy], references: [id])
+}
+
+model Feedback {
+  id         String   @id @default(uuid())
+  customerId String
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now())
+
+  customer Customer @relation(fields: [customerId], references: [id])
+}
+
+model Offer {
+  id              String   @id @default(uuid())
+  customerId      String
+  type            String   // birthday or VIP
+  description     String
+  discountPercent Float
+  expiresAt       DateTime
+  isUsed          Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  customer Customer @relation(fields: [customerId], references: [id])
 }

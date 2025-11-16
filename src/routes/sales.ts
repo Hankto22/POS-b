@@ -5,7 +5,9 @@ import {
   getSalesByDateRange,
   getTotalRevenue,
   getTopProducts,
-  getCustomerSales
+  getCustomerSales,
+  createTransactionController,
+  getAllTransactions
 } from '../controllers/salescontroller.js';
 
 const salesRoutes = new Hono();
@@ -16,5 +18,7 @@ salesRoutes.get('/date-range', getSalesByDateRange);
 salesRoutes.get('/revenue', getTotalRevenue);
 salesRoutes.get('/top-products', getTopProducts);
 salesRoutes.get('/customer/:customerId', getCustomerSales);
+salesRoutes.post('/transaction', createTransactionController);
+salesRoutes.get('/transactions', getAllTransactions);
 
 export default salesRoutes;

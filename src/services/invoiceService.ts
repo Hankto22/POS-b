@@ -13,19 +13,56 @@ export const fetchInvoices = async () => {
 
 export const addInvoice = async (data: any) => {
   const { items, ...invoiceData } = data;
-  return await prisma.invoice.create({
-    data: {
-      ...invoiceData,
-      items: {
-        create: items,
+  return await prisma.$transaction(async (tx: any) => {
+    const invoice = await tx.invoice.create({
+      data: {
+        ...invoiceData,
+        items: {
+          create: items,
+        },
       },
-    },
-    include: {
-      wholesaler: true,
-      items: {
-        include: { product: true },
+      include: {
+        wholesaler: true,
+        items: {
+          include: { product: true },
+        },
       },
-    },
+    });
+
+    // Update stock for each item
+    for (const item of items) {
+      if (item.batchId) {
+        await tx.batch.update({
+          where: { id: item.batchId },
+          data: {
+            stock: {
+              increment: item.quantity,
+            },
+          },
+        });
+      } else if (item.variantId) {
+        await tx.variant.update({
+          where: { id: item.variantId },
+          data: {
+            stock: {
+              increment: item.quantity,
+            },
+          },
+        });
+      } else {
+        // Fallback to product stock
+        await tx.product.update({
+          where: { id: item.productId },
+          data: {
+            stock: {
+              increment: item.quantity,
+            },
+          },
+        });
+      }
+    }
+
+    return invoice;
   });
 };
 
@@ -50,7 +87,52 @@ export const updateInvoice = async (id: string, data: any) => {
 };
 
 export const deleteInvoice = async (id: string) => {
-  return await prisma.invoice.delete({
-    where: { id },
+  return await prisma.$transaction(async (tx: any) => {
+    // Fetch invoice with items
+    const invoice = await tx.invoice.findUnique({
+      where: { id },
+      include: { items: true },
+    });
+
+    if (!invoice) {
+      throw new Error('Invoice not found');
+    }
+
+    // Decrement stock for each item
+    for (const item of invoice.items) {
+      if (item.batchId) {
+        await tx.batch.update({
+          where: { id: item.batchId },
+          data: {
+            stock: {
+              decrement: item.quantity,
+            },
+          },
+        });
+      } else if (item.variantId) {
+        await tx.variant.update({
+          where: { id: item.variantId },
+          data: {
+            stock: {
+              decrement: item.quantity,
+            },
+          },
+        });
+      } else {
+        await tx.product.update({
+          where: { id: item.productId },
+          data: {
+            stock: {
+              decrement: item.quantity,
+            },
+          },
+        });
+      }
+    }
+
+    // Delete the invoice
+    return await tx.invoice.delete({
+      where: { id },
+    });
   });
 };
