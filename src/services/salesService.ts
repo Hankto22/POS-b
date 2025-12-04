@@ -122,8 +122,11 @@ export const createTransaction = async (data: {
   const total = data.items.reduce((sum, item) => sum + item.total, 0) + data.tax - data.discount;
   const paymentTotal = data.payments.reduce((sum, payment) => sum + payment.amount, 0);
 
-  if (Math.abs(total - paymentTotal) > 0.01) {
-    throw new Error('Payment total does not match sale total');
+  // Allow overpayments - change is paymentTotal - total
+  const change = Math.max(0, paymentTotal - total);
+
+  if (paymentTotal < total) {
+    throw new Error('Payment total is less than sale total');
   }
 
   return await prisma.$transaction(async (tx: PrismaClient) => {
@@ -134,6 +137,7 @@ export const createTransaction = async (data: {
         total,
         tax: data.tax,
         discount: data.discount,
+        change,
       },
     });
 

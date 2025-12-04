@@ -111,6 +111,7 @@ model Transaction {
   total      Float
   tax        Float
   discount   Float
+  change     Float    @default(0)
   createdAt  DateTime @default(now())
 
   customer Customer? @relation(fields: [customerId], references: [id])
